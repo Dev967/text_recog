@@ -1,0 +1,47 @@
+MNIST Conv Basic 
+
+ Basic Convolutional MNIST classification using Convolutions 
+ Learning Rate: 0.1 
+ Optimizer: SGD (
+Parameter Group 0
+    dampening: 0
+    lr: 0.1
+    momentum: 0
+    nesterov: False
+    weight_decay: 0
+) 
+ Loss function: CrossEntropyLoss()
+
+ Time Taken: 3.283565841599996 min
+
+ Accuracy: 0.9641000032424927 
+ AVG Loss: 0.02340480179786682 
+
+
+ ==========================================================================================
+Layer (type:depth-idx)                   Output Shape              Param #
+==========================================================================================
+Network                                  [64, 10]                  --
+├─Sequential: 1-1                        [64, 12, 10, 10]          --
+│    └─Conv2d: 2-1                       [64, 3, 22, 22]           150
+│    └─ReLU: 2-2                         [64, 3, 22, 22]           --
+│    └─Conv2d: 2-3                       [64, 6, 16, 16]           888
+│    └─ReLU: 2-4                         [64, 6, 16, 16]           --
+│    └─Conv2d: 2-5                       [64, 12, 10, 10]          3,540
+│    └─ReLU: 2-6                         [64, 12, 10, 10]          --
+├─Sequential: 1-2                        [64, 10]                  --
+│    └─Linear: 2-7                       [64, 500]                 600,500
+│    └─ReLU: 2-8                         [64, 500]                 --
+│    └─Linear: 2-9                       [64, 10]                  5,010
+│    └─Sigmoid: 2-10                     [64, 10]                  --
+==========================================================================================
+Total params: 610,088
+Trainable params: 610,088
+Non-trainable params: 0
+Total mult-adds (M): 80.60
+==========================================================================================
+Input size (MB): 0.20
+Forward/backward pass size (MB): 2.41
+Params size (MB): 2.44
+Estimated Total Size (MB): 5.05
+==========================================================================================

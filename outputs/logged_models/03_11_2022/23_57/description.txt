@@ -1,0 +1,51 @@
+MNIST Conv Basic 
+
+ Basic Convolutional MNIST classification using Convolutions 
+ Learning Rate: 0.1 
+ Optimizer: SGD (
+Parameter Group 0
+    dampening: 0
+    lr: 0.1
+    momentum: 0
+    nesterov: False
+    weight_decay: 0
+) 
+ Loss function: CrossEntropyLoss()
+
+ Time Taken: 20.933040189466663 min
+
+ Accuracy: 0.9894999861717224 
+ AVG Loss: 0.0005050962410634383 
+
+
+ ==========================================================================================
+Layer (type:depth-idx)                   Output Shape              Param #
+==========================================================================================
+Network                                  [64, 10]                  --
+├─Sequential: 1-1                        [64, 48, 3, 3]            --
+│    └─Conv2d: 2-1                       [64, 3, 28, 28]           30
+│    └─ReLU: 2-2                         [64, 3, 28, 28]           --
+│    └─Conv2d: 2-3                       [64, 6, 28, 28]           168
+│    └─ReLU: 2-4                         [64, 6, 28, 28]           --
+│    └─MaxPool2d: 2-5                    [64, 6, 14, 14]           --
+│    └─Conv2d: 2-6                       [64, 12, 14, 14]          660
+│    └─ReLU: 2-7                         [64, 12, 14, 14]          --
+│    └─Conv2d: 2-8                       [64, 24, 14, 14]          2,616
+│    └─ReLU: 2-9                         [64, 24, 14, 14]          --
+│    └─MaxPool2d: 2-10                   [64, 24, 7, 7]            --
+│    └─Conv2d: 2-11                      [64, 48, 7, 7]            10,416
+│    └─ReLU: 2-12                        [64, 48, 7, 7]            --
+│    └─MaxPool2d: 2-13                   [64, 48, 3, 3]            --
+├─Sequential: 1-2                        [64, 10]                  --
+│    └─Linear: 2-14                      [64, 10]                  4,330
+==========================================================================================
+Total params: 18,220
+Trainable params: 18,220
+Non-trainable params: 0
+Total mult-adds (M): 83.97
+==========================================================================================
+Input size (MB): 0.20
+Forward/backward pass size (MB): 8.43
+Params size (MB): 0.07
+Estimated Total Size (MB): 8.71
+==========================================================================================
