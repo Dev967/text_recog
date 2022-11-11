@@ -1,52 +1,56 @@
-import pandas as pd
-from torch.utils.data import Dataset, random_split
-from CONF import *
+import traceback
+
 from PIL import Image
+from torch.utils.data import Dataset, random_split
+
+from CONF import *
+from utils.data.lang_handle import Lang
+from utils.datasets.IAM.reorder_wordsdir import reorder
 from utils.transforms.image_transforms import mdrnn_image_transform
-from utils.transforms.encoding import *
-
-columns = ['filename', 'status', 'grey level', 'x', 'y', 'w', 'h', 'grammatical tag', 'word']
-
-
-def bad_line_handler(x):
-    size = len(x)
-    word = ''
-    if size >= 10:
-        for i in range(8, size):
-            word += f'{x.pop(8)} '
-        return x.append(word)
-    else:
-        raise Exception(f'Not size problem... size={size}')
-
-
-dataframe = pd.read_csv(target_file, delimiter=' ', engine="python", on_bad_lines=bad_line_handler)
-dataframe.columns = columns
-pd.set_option("display.max_columns", None)
 
 
 class IAMWords(Dataset):
-    def __init__(self, data_dir, df, transform=None, target_transform=None):
-        self.dataset_dir = data_dir
-        self.target = df
+    def __init__(self, pairs, lang, transform=None, target_transform=None):
+        reorder()
         self.transform = transform
         self.target_transform = target_transform
+        self.pairs = pairs
+        self.lang = lang
 
     def __len__(self):
-        return len(self.target)
+        return len(self.pairs)
 
     def __getitem__(self, idx):
-        item = self.target.iloc[idx]
-        file = Image.open(f'{dataset_dir}/{item.filename}.png')
-        target = item.word
-        if self.transform: file = self.transform(file)
+        image_file, target = self.pairs[idx]
         try:
-            if self.target_transform: target = self.target_transform(item.word)
+            file = Image.open(image_file)
+            if self.transform: file = self.transform(file)
+            if self.target_transform: target = self.target_transform(target)
+
+            return [file, target]
         except:
-            print("THE WORD: ", item.word)
-        return [file, target]
+            print("Failed to read image: ", image_file)
+            traceback.print_exc()
 
 
-dataframe = dataframe[dataframe.status == 'ok']
+file = open(target_file)
+pairs = []
+for line in file.readlines():
+    arr = line.strip().split(" ")
+    word = ""
 
-whole_dataset = IAMWords(dataset_dir, dataframe, transform=mdrnn_image_transform, target_transform=lineToIndex)
-train_dataset, test_dataset = random_split(whole_dataset, [63968, 10000])
+    if arr[1] != "ok": continue
+
+    for i in range(8, len(arr)):
+        word += arr[i]
+
+    pair = [f'{image_dir}/{arr[0]}.png', word]
+    pairs.append(pair)
+
+lang = Lang(pairs)
+
+whole_dataset = IAMWords(pairs, lang, transform=mdrnn_image_transform, target_transform=lang.wordToIndex)
+
+train_dataset, test_dataset = random_split(whole_dataset, [86456, 10000])
+
+del pairs
