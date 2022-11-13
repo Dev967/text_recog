@@ -1,3 +1,4 @@
+import math
 import traceback
 
 from PIL import Image
@@ -13,14 +14,16 @@ class IAMWords(Dataset):
         self.transform = transform
         self.target_transform = target_transform
         self.lang = lang
+        self.pairs = pairs
 
     def __len__(self):
         return len(self.pairs)
 
     def __getitem__(self, idx):
         image_file, target = self.pairs[idx]
+        image_file = Image.open(image_file)
 
-        if self.transform: image_file = self.transform()
+        if self.transform: image_file = self.transform(image_file)
         if self.target_transform: target = self.target_transform(target)
 
         return [image_file, target]
@@ -49,7 +52,12 @@ for line in file.readlines():
 lang = Lang(pairs)
 
 whole_dataset = IAMWords(pairs, lang, transform=mdrnn_image_transform, target_transform=lang.wordToIndex)
+train_size = math.floor(len(whole_dataset) * 80 / 100)
+test_size = math.floor(len(whole_dataset) * 20 / 100)
+print(f'Train/Test dataset Size: {train_size}/{test_size} whole dataset size: {len(whole_dataset)}')
+if train_size + test_size < len(whole_dataset):
+    train_size += len(whole_dataset) - (train_size + test_size)
 
-train_dataset, test_dataset = random_split(whole_dataset, [86456, 10000])
+train_dataset, test_dataset = random_split(whole_dataset, [train_size, test_size])
 
 del pairs
