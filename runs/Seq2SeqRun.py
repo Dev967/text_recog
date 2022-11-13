@@ -57,12 +57,15 @@ class Run:
             if self.run_conf.train:
                 # training
                 tic = time.perf_counter()
+                os.makedirs(f'{self.curr_dir}/losses', exist_ok=True)
                 for epoch in range(self.run_conf.epochs):
                     loss = train(self.encoder, self.decoder, self.train_dataloader, self.run_conf.loss_fn,
                                  self.optim_fn, verbose=False)
                     # for checkpoint, incase training is interrupted in-between
                     torch.save(self.encoder, f'{self.curr_dir}/encoder')
                     torch.save(self.decoder, f'{self.curr_dir}/decoder')
+                    torch.save(loss, f'{self.curr_dir}/losses/epoch_{epoch}')
+
                     print(f'\nLoss after epoch({epoch}): ', sum(loss) / len(loss))
 
                 toc = time.perf_counter()

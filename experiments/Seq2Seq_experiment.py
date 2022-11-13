@@ -27,7 +27,7 @@ class Experiment:
             "train": True,  # Set false if dont need to train the model
             "show_plots": True,
 
-            "epochs": 5,
+            "epochs": 10,
             "lr": 0.1,
 
             "loss_fn": nn.NLLLoss(),

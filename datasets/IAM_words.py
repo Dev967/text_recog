@@ -14,7 +14,6 @@ class IAMWords(Dataset):
         reorder()
         self.transform = transform
         self.target_transform = target_transform
-        self.pairs = pairs
         self.lang = lang
 
     def __len__(self):
@@ -22,15 +21,11 @@ class IAMWords(Dataset):
 
     def __getitem__(self, idx):
         image_file, target = self.pairs[idx]
-        try:
-            file = Image.open(image_file)
-            if self.transform: file = self.transform(file)
-            if self.target_transform: target = self.target_transform(target)
 
-            return [file, target]
-        except:
-            print("Failed to read image: ", image_file)
-            traceback.print_exc()
+        if self.transform: image_file = self.transform()
+        if self.target_transform: target = self.target_transform(target)
+
+        return [image_file, target]
 
 
 file = open(target_file)
@@ -44,8 +39,14 @@ for line in file.readlines():
     for i in range(8, len(arr)):
         word += arr[i]
 
-    pair = [f'{image_dir}/{arr[0]}.png', word]
-    pairs.append(pair)
+    try:
+        image = Image.open(f'{image_dir}/{arr[0]}.png')
+        pair = [image, word]
+        pairs.append(pair)
+
+    except:
+        print("failed to reoad image ", f'{image_dir}/{arr[0]}.png')
+        traceback.print_exc()
 
 lang = Lang(pairs)
 
