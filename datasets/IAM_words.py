@@ -41,11 +41,11 @@ for line in file.readlines():
 
     try:
         image = Image.open(f'{image_dir}/{arr[0]}.png')
-        pair = [image, word]
+        pair = [f'{image_dir}/{arr[0]}.png', word]
         pairs.append(pair)
 
     except:
-        print("failed to reoad image ", f'{image_dir}/{arr[0]}.png')
+        print("failed to read image ", f'{image_dir}/{arr[0]}.png')
         traceback.print_exc()
 
 lang = Lang(pairs)
