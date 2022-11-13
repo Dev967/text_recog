@@ -5,13 +5,11 @@ from torch.utils.data import Dataset, random_split
 
 from CONF import *
 from utils.data.lang_handle import Lang
-from utils.datasets.IAM.reorder_wordsdir import reorder
 from utils.transforms.image_transforms import mdrnn_image_transform
 
 
 class IAMWords(Dataset):
     def __init__(self, pairs, lang, transform=None, target_transform=None):
-        reorder()
         self.transform = transform
         self.target_transform = target_transform
         self.lang = lang
