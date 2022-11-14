@@ -31,6 +31,7 @@ class IAMWords(Dataset):
 
 file = open(target_file)
 pairs = []
+print("starting reading data...")
 for line in file.readlines():
     arr = line.strip().split(" ")
     word = ""
@@ -48,6 +49,8 @@ for line in file.readlines():
     except:
         print("failed to read image ", f'{image_dir}/{arr[0]}.png')
         traceback.print_exc()
+
+print("read complete!")
 
 lang = Lang(pairs)
 

@@ -56,9 +56,11 @@ class Run:
 
             if self.run_conf.train:
                 # training
+                print('starting training...')
                 tic = time.perf_counter()
                 os.makedirs(f'{self.curr_dir}/losses', exist_ok=True)
                 for epoch in range(self.run_conf.epochs):
+                    print(f'starting epoch {epoch}')
                     loss = train(self.encoder, self.decoder, self.train_dataloader, self.run_conf.loss_fn,
                                  self.optim_fn, verbose=False)
                     # for checkpoint, incase training is interrupted in-between
@@ -67,6 +69,8 @@ class Run:
                     torch.save(loss, f'{self.curr_dir}/losses/epoch_{epoch}')
 
                     print(f'\nLoss after epoch({epoch}): ', sum(loss) / len(loss))
+
+                print('training complete!')
 
                 toc = time.perf_counter()
                 time_taken = (toc - tic) / 60
