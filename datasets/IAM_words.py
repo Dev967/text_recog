@@ -1,6 +1,8 @@
 import math
+import os
 import traceback
 
+import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset, random_split
 
@@ -32,27 +34,38 @@ class IAMWords(Dataset):
 file = open(target_file)
 pairs = []
 print("starting reading data...")
-for line in file.readlines():
-    arr = line.strip().split(" ")
-    word = ""
+cache_dir = 'cache/lang'
+use_cache = True if host == 'localhost' and os.path.isdir(cache_dir) else False
+print("Using Cache: ", use_cache)
 
-    if arr[1] != "ok": continue
+if not use_cache:
+    os.makedirs(cache_dir, exist_ok=True)
+    for line in file.readlines():
+        arr = line.strip().split(" ")
+        word = ""
 
-    for i in range(8, len(arr)):
-        word += arr[i]
+        if arr[1] != "ok": continue
 
-    try:
-        image = Image.open(f'{image_dir}/{arr[0]}.png')
-        pair = [f'{image_dir}/{arr[0]}.png', word]
-        pairs.append(pair)
+        for i in range(8, len(arr)):
+            word += arr[i]
 
-    except:
-        print("failed to read image ", f'{image_dir}/{arr[0]}.png')
-        traceback.print_exc()
+        try:
+            image = Image.open(f'{image_dir}/{arr[0]}.png')
+            pair = [f'{image_dir}/{arr[0]}.png', word]
+            pairs.append(pair)
+        except:
+            print("failed to read image ", f'{image_dir}/{arr[0]}.png')
+            if not supress_errors: traceback.print_exc()
 
+    arr = np.array(pairs)
+    np.save(f'{cache_dir}/pairs', arr)
+
+else:
+    # if using cache
+    pairs = np.load(f'{cache_dir}/pairs.npy')
+
+lang = Lang(pairs, use_cache)
 print("read complete!")
-
-lang = Lang(pairs)
 
 whole_dataset = IAMWords(pairs, lang, transform=mdrnn_image_transform, target_transform=lang.wordToIndex)
 train_size = math.floor(len(whole_dataset) * 80 / 100)

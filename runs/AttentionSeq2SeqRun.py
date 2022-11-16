@@ -49,6 +49,7 @@ class Run:
         if local_run_conf: self.run_conf = local_run_conf
 
         if not self.run_conf.quick_run:
+            # logging stuff
             os.makedirs(self.curr_dir, exist_ok=True)
             file_obj = open(f'{self.curr_dir}/description.txt', 'a')
             file_obj.write(
@@ -59,9 +60,9 @@ class Run:
                 tic = time.perf_counter()
                 os.makedirs(f'{self.curr_dir}/losses', exist_ok=True)
                 for epoch in range(self.run_conf.epochs):
-                    print(f'starting epoch {epoch}')
+                    print(f'Epoch {epoch}')
                     loss = train(self.encoder, self.decoder, self.train_dataloader, self.run_conf.loss_fn,
-                                 self.optim_fn, verbose=True, attention_enabled=False)
+                                 self.optim_fn, verbose=True, attention_enabled=True)
 
                     torch.save(self.encoder, f'{self.curr_dir}/encoder')
                     torch.save(self.decoder, f'{self.curr_dir}/decoder')
@@ -93,7 +94,7 @@ class Run:
 
         losses = []
         for lr in learning_rates:
-            print(f'testing {lr}...')
+            print(f'Testing {lr}...')
             encoder = self.Encoder(128, 128)
             decoder = self.Decoder(80, 80, 128)
             loss_func = nn.NLLLoss()
@@ -102,7 +103,7 @@ class Run:
                 {'params': decoder.parameters()}
             ], lr=lr)
             loss_arr = train(encoder, decoder, subset_dataloader, loss_func, optim_fn, verbose=True,
-                             attention_enabled=False)
+                             attention_enabled=True)
             losses.append(loss_arr)
 
         rows, cols, idx = 2, 3, 0

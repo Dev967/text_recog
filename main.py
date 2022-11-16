@@ -6,6 +6,7 @@ def main():
     print("Running on ", host)
     exp = Experiment()
     exp.start()
+    # exp.test()
 
 
 main()

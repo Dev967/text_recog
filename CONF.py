@@ -12,3 +12,5 @@ target_file = f'{dataset_dir}/ascii/words.txt' if host == "localhost" else f'{da
 batch_size = 64
 shuffle = True
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+supress_errors = True

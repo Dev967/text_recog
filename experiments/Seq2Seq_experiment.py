@@ -4,8 +4,8 @@ from torch.utils.data import DataLoader
 
 from CONF import batch_size, shuffle
 from datasets.IAM_words import train_dataset, test_dataset
-from models.Seq2Seq import Encoder, Decoder
-from runs.Seq2SeqRun import Run
+from models.Seq2Seq import Encoder, AttentionDecoder
+from runs.AttentionSeq2SeqRun import Run as AttentionSeq2SeqRun
 from utils.data.custom_collate_fn import collate_variable_images
 from utils.run_conf import RunConf
 
@@ -20,11 +20,11 @@ class Experiment:
                                           collate_fn=collate_variable_images)
 
         config = {
-            "name": "Seq2Seq GRU",
-            "description": "Seq2Seq model using GRU ",
+            "name": "Seq2Seq GRU with Attention",
+            "description": "Seq2Seq model using GRU and Attention",
             "model_path": None,
-            "quick_run": False,  # Set true if dont want to save the stats or train the model
-            "train": True,  # Set false if dont need to train the model
+            "quick_run": False,  # Set true if you don't want to save the stats or train the model
+            "train": True,  # Set false if you don't need to train the model
             "show_plots": True,
 
             "epochs": 10,
@@ -41,12 +41,14 @@ class Experiment:
         self.run_conf = RunConf(config)
 
     def start(self):
-        run_handle = Run(Encoder, Decoder, self.run_conf)
+        run_handle = AttentionSeq2SeqRun(Encoder, AttentionDecoder, self.run_conf)
         run_handle.run()
 
     def test(self):
-        run_handle = Run(Encoder, Decoder, self.run_conf)
+        run_handle = AttentionSeq2SeqRun(Encoder, AttentionDecoder, self.run_conf)
+        # run_handle = BasicSeq2SeqRun(Encoder, Decoder, self.run_conf)
+
         # run_handle.test()
         # run_handle.performance_metrics(True )
-        # run_handle.compare_lr([0.0001, 0.001, 0.01, 0.1, 0.9], self.test_dataloader, True)
+        run_handle.compare_lr([0.0001, 0.001, 0.01, 0.1, 0.9], True)
         # run_handle.print_conv_filters()
