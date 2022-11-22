@@ -13,4 +13,4 @@ batch_size = 64
 shuffle = True
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-supress_errors = True
+supress_errors = False if host == 'localhost' else True

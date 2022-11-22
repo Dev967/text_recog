@@ -15,19 +15,12 @@ from utils.training_script.segmented_model_train import train
 
 
 class Run:
-    def __init__(self, Encoder, Decoder, run_conf):
+    def __init__(self, run_conf):
         self.uniq_classes = None
         self.name = run_conf.name
         self.run_conf = run_conf
-        self.Encoder = Encoder
-        self.Decoder = Decoder
-
-        if run_conf.model_path:
-            self.encoder = torch.load(run_conf.model_path[0])
-            self.decoder = torch.load(run_conf.model_path[1])
-        else:
-            self.encoder = Encoder(128, 128)
-            self.decoder = Decoder(80, 80, 128)
+        self.encoder = run_conf.encoder
+        self.decoder = run_conf.decoder
 
         self.optim_fn = run_conf.optim_fn([
             {'params': self.encoder.parameters()},
@@ -43,6 +36,8 @@ class Run:
         today = now.strftime("%d_%m_%Y")
         curr_time = now.strftime("%H_%M")
         self.curr_dir = f'outputs/logged_models/{today}/{curr_time}'
+
+        self.train_type = run_conf.train_type if run_conf.train_type else 0
 
     def run(self, local_run_conf=None):
 
@@ -61,7 +56,7 @@ class Run:
                 for epoch in range(self.run_conf.epochs):
                     print(f'starting epoch {epoch}')
                     loss = train(self.encoder, self.decoder, self.train_dataloader, self.run_conf.loss_fn,
-                                 self.optim_fn, verbose=True, attention_enabled=False)
+                                 self.optim_fn, verbose=True, training_type=self.train_type)
 
                     torch.save(self.encoder, f'{self.curr_dir}/encoder')
                     torch.save(self.decoder, f'{self.curr_dir}/decoder')
@@ -79,7 +74,7 @@ class Run:
             torch.save(self.encoder, f'{self.curr_dir}/encoder')
             torch.save(self.decoder, '{self.curr_dir}/encoder')
 
-    def compare_lr(self, learning_rates, show_plots):
+    def compare_lr(self, Encoder, Decoder, learning_rates, show_plots):
         total = len(self.train_dataloader.dataset)
         subset_size = math.floor(total / 10)
         rest = total - subset_size
@@ -94,15 +89,15 @@ class Run:
         losses = []
         for lr in learning_rates:
             print(f'testing {lr}...')
-            encoder = self.Encoder(128, 128)
-            decoder = self.Decoder(80, 80, 128)
+            encoder = Encoder(128, 128)
+            decoder = Decoder(80, 80, 128)
             loss_func = nn.NLLLoss()
             optim_fn = torch.optim.SGD([
                 {'params': encoder.parameters()},
                 {'params': decoder.parameters()}
             ], lr=lr)
-            loss_arr = train(encoder, decoder, subset_dataloader, loss_func, optim_fn, verbose=True,
-                             attention_enabled=False)
+            loss_arr = train(encoder, decoder, subset_dataloader, loss_func, optim_fn, training_type=self.train_type,
+                             verbose=True)
             losses.append(loss_arr)
 
         rows, cols, idx = 2, 3, 0

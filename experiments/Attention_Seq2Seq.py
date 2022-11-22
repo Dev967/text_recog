@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 from CONF import batch_size, shuffle
 from datasets.IAM_words import train_dataset, test_dataset, lang
-from models.Seq2Seq import ConvolutionEncoder, ConvolutionalDecoder
+from models.Seq2Seq import Encoder, AttentionDecoder
 from runs.Seq2SeqRun import Run
 from utils.data.custom_collate_fn import collate_variable_images
 from utils.run_conf import RunConf
@@ -21,15 +21,15 @@ class Experiment:
                                           collate_fn=collate_variable_images)
 
         config = {
-            "name": "Seq2Seq GRU with Attention",
-            "description": "Seq2Seq model using GRU and Attention",
+            "name": "Seq2Seq LSTM with Attention",
+            "description": "More LSTM layers, Tanh, using LSTM instead of GRU",
             "model_path": None,
             "quick_run": False,  # Set true if you don't want to save the stats or train the model
             "train": True,  # Set false if you don't need to train the model
             "show_plots": True,
 
             "epochs": 10,
-            "lr": 0.1,
+            "lr": 0.01,
 
             "loss_fn": nn.NLLLoss(),
             "optim_fn": torch.optim.SGD,
@@ -37,14 +37,12 @@ class Experiment:
             "batch_size": 64,
             "train_dataloader": self.train_dataloader,
             "test_dataloader": self.test_dataloader,
-            "train_type": TrainingType.CONVOLUTION,
-            "encoder": ConvolutionEncoder(),
-            "decoder": ConvolutionalDecoder(80, 80, 1152, 16)
+            "train_type": TrainingType.ATTENTION,
+            "encoder": Encoder(bidirectional=False, num_layers=1),
+            "decoder": AttentionDecoder(80, 80, 128, bidirectional=False, num_layers=1)
         }
 
         self.run_conf = RunConf(config)
-        self.encoder = ConvolutionEncoder()
-        self.decoder = ConvolutionalDecoder(80, 80, 1152, 16)
 
     def start(self):
         run_handle = Run(run_conf=self.run_conf)
@@ -53,15 +51,6 @@ class Experiment:
 
     def test(self):
         sample_images, sample_labels = next(iter(self.train_dataloader))
-
-        out, context = self.encoder(sample_images[0].reshape(1, 1, 256, 128))
-
-        decoder_hidden = context.view(1, 1, -1)
-        decoder_input = lang.indexEncoding(torch.Tensor([0]).long())
-        for i in range(len(sample_labels[0])):
-            decoder_output, decoder_hidden, attn = self.decoder(decoder_input.view(1, 1, -1), decoder_hidden,
-                                                                out.transpose(1, 0))
-            print(decoder_output.shape)
 
         # run_handle = AttentionSeq2SeqRun(Encoder, AttentionDecoder, self.run_conf)
         # run_handle = BasicSeq2SeqRun(Encoder, Decoder, self.run_conf)

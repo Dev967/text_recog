@@ -62,15 +62,24 @@ class Lang:
         file_n_chars.close()
 
     def wordToIndex(self, word):
+        # turns word to index, str -> tensor
         output = []
         for char in word:
             output.append(self.charToIndex[char])
         return torch.Tensor(output).long()
 
     def indexEncoding(self, tensor):
+        # turns integer to one hot encoding, int -> tensor
         output_tensor = torch.Tensor()
         for i in tensor:
             temp = torch.zeros(self.n_chars)
             temp[i] = 1
             output_tensor = torch.cat((output_tensor, temp.unsqueeze(dim=0)), dim=0)
         return output_tensor
+
+    def tensorToWord(self, tensor):
+        # turns integer to word, int -> word
+        output = ""
+        for i in tensor:
+            output += self.indexToCharacter[i.item()]
+        return output

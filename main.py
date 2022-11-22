@@ -1,10 +1,10 @@
 from CONF import host
-from experiments.Seq2Seq_experiment import Experiment
+from experiments.Attention_Seq2Seq import Experiment as AttentionExperiment
 
 
 def main():
     print("Running on ", host)
-    exp = Experiment()
+    exp = AttentionExperiment()
     exp.start()
     # exp.test()
 

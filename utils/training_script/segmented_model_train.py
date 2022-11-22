@@ -1,10 +1,17 @@
 import random
 import traceback
+from enum import Enum
 
 import torch
 
 from CONF import *
 from datasets.IAM_words import lang
+
+
+class TrainingType(Enum):
+    BASIC = 0
+    ATTENTION = 1
+    CONVOLUTION = 2
 
 
 # functions for training individual images
@@ -86,13 +93,53 @@ def train_attention(img, target, encoder, decoder, loss_fn, optim_fn):
         return 0
 
 
-def train(encoder, decoder, dataloader, loss_fn, optimizer_func, verbose=True, attention_enabled=False):
+def train_convolutional(img, target, encoder, decoder, loss_fn, optim_fn):
+    optim_fn.zero_grad()
+
+    encoder_output, context_vector = encoder(img.view(1, 1, 256, 128))
+
+    decoder_hidden = context_vector.view(1, 1, -1)
+    encoded_target = lang.indexEncoding(target)
+    decoder_input = lang.indexEncoding(torch.Tensor([0]).long())
+    decoder_outputs = torch.Tensor()
+
+    use_teacher_forcing = True if random.random() < 0.5 else False
+
+    if use_teacher_forcing:
+        for i in range(len(target)):
+            output, decoder_hidden, attn_weights = decoder(decoder_input.view(1, 1, -1), decoder_hidden,
+                                                           encoder_output.transpose(1, 0))
+            decoder_outputs = torch.cat((decoder_outputs, output.squeeze(1)), 0)
+            decoder_input = encoded_target[i]
+    else:
+        for i in range(len(target)):
+            output, decoder_hidden, attn_weights = decoder(decoder_input.view(1, 1, -1), decoder_hidden,
+                                                           encoder_output.transpose(1, 0))
+            decoder_outputs = torch.cat((decoder_outputs, output.squeeze(1)), 0)
+            decoder_input = output
+            topv, topk = output.topk(1)
+            if topk.item() == 1: break
+
+    try:
+        loss = loss_fn(decoder_outputs, target)
+        loss.backward()
+        optim_fn.step()
+
+        return loss.item() / len(target)
+
+    except:
+        if not supress_errors: traceback.print_exc()
+        print(use_teacher_forcing, decoder_outputs.shape, target.shape)
+        return 0
+
+
+def train(encoder, decoder, dataloader, loss_fn, optimizer_func, training_type, verbose=True):
     batch_loss = []
     total = len(dataloader.dataset)
     count = 0
     batch = 0
 
-    if attention_enabled:
+    if training_type == TrainingType.ATTENTION:
         # use attention training function
         for _, (X, y) in enumerate(dataloader):
 
@@ -114,6 +161,21 @@ def train(encoder, decoder, dataloader, loss_fn, optimizer_func, verbose=True, a
 
         return batch_loss
 
+    elif training_type == TrainingType.CONVOLUTION:
+        # for using convolutional training function
+        for _, (X, y) in enumerate(dataloader):
+            batch += 1
+
+            loss = 0
+            for i in range(len(X)):
+                count += 1
+
+                loss += train_convolutional(X[i], y[i], encoder, decoder, loss_fn, optimizer_func)
+            batch_loss.append(loss)
+            if verbose:
+                if batch % 100 == 0:
+                    print(
+                        f'Avg loss: {sum(batch_loss) / batch} most recent loss: {loss} [{count}/{total}]  {(count / total) * 100}%')
     else:
         # use normal training function
         for _, (X, y) in enumerate(dataloader):
